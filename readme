@@ -1,0 +1,129 @@
+# ADHD-Friendly DevOps Project Plan 🚀
+
+This plan is **100% hands-on, project-based, and broken into clear levels** to be ADHD-friendly. We'll skip the boring theory and get straight to building!
+
+---
+
+## The Core Idea
+
+You will take a very simple "Hello World" web application and build a complete, automated pipeline around it.
+
+---
+
+## Your Starter Project
+
+You don't even need to code it. Just create a folder, and inside it, create a file called `index.html` with this content:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My DevOps Project</title>
+</head>
+<body>
+    <h1>Level 1 Complete! My First Automated Deployment!</h1>
+</body>
+</html>
+```
+
+---
+
+## Level 1: The Automated Deployment (The Foundation) 🏗️
+
+### **Goal:**  
+Automatically deploy your simple website to a live server every time you push a code change.
+
+### **Project:**  
+Create a CI/CD pipeline that takes your code from GitHub and places it on a cloud server, making it accessible via a public IP address.
+
+### **Core Tools:**
+- **Git & GitHub:** For version control.
+- **A Cloud Server (VM):** We'll use an AWS EC2 instance (they have a free tier).
+- **GitHub Actions:** To automate the deployment.
+
+---
+
+## Step-by-Step Actions
+
+### 1. GitHub Setup
+
+- Create a new public repository on GitHub.
+- Add your `index.html` file to it and `git push` it to the repository.
+
+---
+
+### 2. Cloud Server Setup
+
+- Sign up for an AWS Free Tier account.
+- Go to the EC2 service and launch a new instance.
+- Choose an "Ubuntu" server, and the `t2.micro` type (it's free-tier eligible).
+- Create and download a new key pair (`.pem` file). **Don't lose this!**
+- In the "Network settings," allow both HTTP and SSH traffic.
+- Launch the instance! Once it's running, copy its Public IPv4 address.
+
+---
+
+### 3. Manual Deployment (Just Once!)
+
+- Open a terminal on your computer. Use SSH to connect to your new server:
+  ```sh
+  ssh -i /path/to/your/key.pem ubuntu@YOUR_PUBLIC_IP
+  ```
+- Once connected, install a simple web server:
+  ```sh
+  sudo apt update
+  sudo apt install nginx -y
+  ```
+- Now, copy your `index.html` file to the Nginx web root:
+  ```sh
+  sudo cp /path/to/your/index.html /var/www/html/
+  ```
+- Go to `http://YOUR_PUBLIC_IP` in your browser. You should see your website! This proves the server works.
+
+---
+
+### 4. Automate with GitHub Actions
+
+- In your GitHub repository, go to **Settings > Secrets and variables > Actions**.
+- Create 3 new repository secrets:
+  - `SERVER_HOST`: Your server's public IP address.
+  - `SERVER_USER`: `ubuntu`
+  - `SERVER_SSH_KEY`: Open your `.pem` file with a text editor and copy the entire content (including `-----BEGIN RSA PRIVATE KEY-----`). Paste it here.
+- In your repo, create a folder path `.github/workflows/`. Inside, create a file named `deploy.yml`.
+- Paste this code into `deploy.yml`:
+
+```yaml
+name: Deploy Website
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Deploy to Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          sudo cp index.html /var/www/html/
+```
+
+---
+
+### 5. Test It!
+
+- Change the `<h1>` text in your `index.html` file to `"It's Automated!"`.
+- `git commit` and `git push` your change.
+- Go to the "Actions" tab in GitHub. Watch your workflow run.
+- Once it's green, refresh your website in the browser. The text should be updated automatically!
+
+---
+
+## 🎉 You've just built a full CI/CD pipeline!
+
